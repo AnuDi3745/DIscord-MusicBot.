@@ -187,4 +187,4 @@ async def skip(ctx):
 async def change_status():
     await client.change_presence(activity=discord.Game(choice(status)))
 
-client.run('ODg4NzkzOTMxNTkxMDY1NzMw.YUX32g.j7ciwotYJ3B9VfuUbGVHs2RYegM')
+client.run('Token')
