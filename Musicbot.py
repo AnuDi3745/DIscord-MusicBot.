@@ -106,6 +106,9 @@ async def not_playing(ctx):
     if voice_client and voice_client.is_playing():
         pass
     else:
+        if voice_client and voice_client.is_paused():
+            pass
+        else:
             async with ctx.typing():
                 player_queue = await YTDLSource.from_url(queue[0], loop=client.loop)
                 voice_channel.play(player_queue, after=lambda e: print('Player error: %s' % e) if e else None)
