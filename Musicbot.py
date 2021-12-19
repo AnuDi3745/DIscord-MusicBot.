@@ -1,8 +1,8 @@
 import asyncio
 import discord
 from discord.ext import commands, tasks
+from discord.message import Message
 import youtube_dl
-
 
 from random import choice
 
@@ -48,10 +48,13 @@ class YTDLSource(discord.PCMVolumeTransformer):
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
-
+#prefixes=['+','-','!','#', '.']
 client = commands.Bot(command_prefix='-')
+#@client.command(name='prefix', help='This command changes prefix',aliases=['cp'])
+#async def prefix(ctx):
+   # await ctx.send('''Choose: 
 
-status = ['Playing valorant', 'Music','-help','Minecraft']
+status = ['Valorant', 'Music','-help','Minecraft']
 
 @client.event
 async def on_ready():
@@ -60,10 +63,12 @@ async def on_ready():
     print('Bot is online!')
 
 @client.event
-async def on_member_join(member):
-    channel = discord.utils.get(member.guild.channels, name='general')
-    await channel.send(f'Welcome {member.mention}!  Ready to jam out? See `?help` command for details!')
+async def on_member_join(ctx):
+    await ctx.send(f'Welcome {ctx.author.mention}!  Ready to jam out? See `-help` command for details!')
 
+@client.command(name = 'ping_user', help='Pings the user',aliases=['pu'])
+async def mention_ping(ctx,member:discord.Member):
+    await ctx.send(f"HI  {member.mention}")
 
 
 @client.command(name='ping', help='This command returns the latency')
@@ -72,13 +77,21 @@ async def ping(ctx):
 
 @client.command(name='hello', help='This command returns a welcome message',aliases=['hi','yo'])
 async def hello(ctx):
-    responses = ['Play a song,i aint a chatbot', 'Mcoe Retard','**Wasssuup!**']
+    responses = ['Play a song,i aint a chatbot','**Wasssuup!**']
     await ctx.send('**HI!**')
     await ctx.send(choice(responses))
 
 @client.command(name='achha_aise', help='Cant expect better from MCOE',aliases=['auwmdya'])
 async def hello(ctx):
     await ctx.send(':achha_aise:')
+
+@client.command(name='kd', help='Cant expect better from MCOE',aliases=['ki','kcd','krm','klu','kb'])
+async def hello(ctx):
+    await ctx.send('Karuta is a Bitch!')
+
+@client.command(name='happybirthdayitachi', help='Cant expect better from MCOE',aliases=['HBDI'])
+async def hello(ctx):
+    await ctx.send('**HAPPY BIRTHDAY ITUCHI KUN!!**')   
 
 @client.command(name='die', help='Why does this even exist')
 async def die(ctx):
@@ -112,7 +125,7 @@ async def not_playing(ctx):
             async with ctx.typing():
                 player_queue = await YTDLSource.from_url(queue[0], loop=client.loop)
                 voice_channel.play(player_queue, after=lambda e: print('Player error: %s' % e) if e else None)
-            await ctx.send('**Now playing: {}**'.format(player_queue.title))
+            await ctx.send('**Now playing: {}**'.format(player_queue.title)+' **Requested By: **'+format(ctx.author.mention))
             del queue[0]
 
 
@@ -121,19 +134,20 @@ async def play(ctx,url,*args):
     voice_client = ctx.message.guild.voice_client
     server = ctx.message.guild
     voice_channel = server.voice_client
+
     for word in args:
         url += ' '
         url += word
     if voice_client and voice_client.is_playing():
         queue.append(url)
         print(queue)
-        await ctx.send('**Added:** {}'.format(url))
+        await ctx.send('**Added:** {}'.format(url)+' **Requested By: **'+format(ctx.author.mention))
         not_playing.start(ctx)
     else:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=client.loop)
                 voice_channel.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
-            await ctx.send('**Now playing:** {}'.format(player.title))
+            await ctx.send('**Now playing:** {}'.format(player.title)+'** Requested By: **'+format(ctx.author.mention))
 
 
 @client.command(name='disconnect', help='This command stops the music and makes the bot leave the voice channel',aliases=['dc'])
@@ -152,7 +166,7 @@ async def stop(ctx):
 
 @client.command(name='queue', help='This command displays the queue',aliases=['q'])
 async def queue_(ctx):
-    await ctx.send(queue)
+    await ctx.send('**Queue: ** {}'.format(queue))
 
 @client.command(name='pause', help='This command pauses the music',aliases=['pau'])
 async def pause(ctx):
@@ -183,11 +197,15 @@ async def skip(ctx):
                 player_queue = await YTDLSource.from_url(queue[0], loop=client.loop)
                 voice_channel.play(player_queue, after=lambda e: print('Player error: %s' % e) if e else None)
             await ctx.send("**Song Skipped**")
-            await ctx.send('**Now playing:** {}'.format(player_queue.title))  
-            del queue[0]    
+            await ctx.send('**Now playing:** {}'.format(player_queue.title))
+            del queue[0]  
+  
+
+
 
 @tasks.loop(seconds=20)
 async def change_status():
+
     await client.change_presence(activity=discord.Game(choice(status)))
 
 client.run('Token')
